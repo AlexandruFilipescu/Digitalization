@@ -1,0 +1,109 @@
+pragma solidity ^0.8.7;
+// SPDX-License-Identifier: UNLICENSED
+import "hardhat/console.sol";
+
+
+contract bluePrints {
+    
+    // Use better a solidity mapping
+    mapping( string => bytes32) public blueprintRegistry;  
+
+    function uploadHashValue(string memory key, string memory receivedBluePrintHashed) public {
+       
+            bytes32 bluePrint = keccak256(abi.encodePacked(receivedBluePrintHashed)); 
+            blueprintRegistry[key] = bluePrint;
+        
+        
+    }  // Check if the ID is already there. USE THE REQUIRE STATEMENT only the owner of 
+      //the contract can set the hash value or update it
+                                                                                                                                                        // "external keyword" – like public functions, except they cannot be called from within the contract unless explicitly prefixed with the keyword this (this.function())                                                                                                                    // Consensus mechanism: Proof of work
+    //check if hash for blueprint name exists                                                                                                           // "memory" keyword: ephemeral storage in memory
+    function existsHashValue(string memory blueprintName) public view returns(bool){                                                                  //pure – a pure function is the one that neither reads nor writes any variables in storage. It can only operate on argument and return data, without reference to any stored data.
+        return blueprintRegistry[blueprintName] != 0x0;                                                                      //The keyword abi.encodePacked is used with statements for encoding data input
+    }   
+                      //NAME OF PROJECT     //ACTUAL BLUEPRINT ACTUAL BYTES OF IMAGE
+    function hasIntegrity(string memory receivedBluePrint) external view returns(bool) {
+        bytes32 bluePrint1 = keccak256(abi.encodePacked(receivedBluePrint));
+        bytes32 bluePrint2 = blueprintRegistry[receivedBluePrint];
+  
+    
+        return bluePrint1 == bluePrint2;
+        
+    }
+
+
+     
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // {
+    //     "0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e" : "HASH",
+    //     "msg.sender" : "HASH VALUE OF THE HASHED BYTES OF THE PDF"
+    // }
+
+
+
+
+
+
+    
+    //bytes32 bluePrint = keccak256(if bytes _bluePrint);
+    // Function that verifies the integrity of the image by taking it's bytes and, hashes them and verifies with the blockchain
+
+                                                                                                                             // Ethereum uses Keccak-256 in a consensus engine called Ethash. Keccak is a family of hash functions that eventually got standardized to SHA-3   
+        // console.logString("bluePrint1");
+        // console.logBytes32(bluePrint1);
+        // console.logString("bluePrint2");
+        // console.logBytes32(bluePrint2);
+
+
+
+
+
+
+
+
+
+
+    
+    //address public owner;  // 0x48Cb6b2a159607b33A5E62DC8f0b723bfb59B0a9
+    //uint256 public balance ;
+    // constructor(){
+    //     owner = msg.sender;  // The adress of the person that calls the smart contract
+    // }
+
+    // receive () payable external {
+    //     balance += msg.value; // msg.value lets us access how much money was sent to the smart contract within the transaction 
+
+    // }
+
+    // function withdraw(uint amount, address payable destAddr) public {
+    //     require(msg.sender == owner, "Only owner can withraw");
+    //     require(amount <= balance, "Insufficient funds");
+
+    //     destAddr.transfer(amount);
+    //     balance -= amount;
+    // }
