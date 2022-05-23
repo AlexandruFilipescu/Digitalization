@@ -43,13 +43,24 @@
 				</div>
 				<br>
 			<button onclick="uploadBlueprint()" id="upload" class="btn btn-primary">Upload Blueprint</button>
-		</form>
-
+		</form>				
+<!-- uploadBlueprint()  -->
 			</div>
 			<div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
 				Update blueprint
 			</div>
-			<div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">Validate blueprint</div>
+			<div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+				<form id="myForm2">
+					<div class="form-group">
+						<label for="uidInput">Hash value</label>
+						<input type="text" class="form-control" id="uidInput" placeholder="Enter Hash">
+						<small id="UIDHelp" class="form-text text-muted"> Make sure that you use an hash value</small>
+					</div>
+				
+					<br>
+				<button onclick="validateBlueprint()" id="validate" class="btn btn-primary">Validate blueprint</button>
+			</form>	
+			</div>
 		  </div>
 		
 
@@ -82,8 +93,33 @@
 
 
 <script type="module">
-	
+	//In the UI have a field to enter the Contract Address
     const ABI = [
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "UID",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "certifier",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "hashValue",
+				"type": "bytes32"
+			}
+		],
+		"name": "NewContract",
+		"type": "event"
+	},
 	{
 		"inputs": [
 			{
@@ -97,7 +133,7 @@
 				"type": "bytes32"
 			}
 		],
-		"name": "updateBluePrint",
+		"name": "updateBlueprint",
 		"outputs": [
 			{
 				"internalType": "bool",
@@ -178,7 +214,7 @@
 	}
 ]
 
-
+	
 
     let provider = await detectEthereumProvider();
     let web3 = null;
@@ -195,14 +231,15 @@
     } else {
         console.log(web3);
     }
-    const CONTRACT_ADDRESS = "0x045660a9AE96286f97035569393A2dcbDC6EcD78";
+   
 
 	var form = document.getElementById("myForm"); 
+	var form2= document.getElementById("myForm2"); 
 	function handleForm(event) {
 		event.preventDefault();
 	 }
 	form.addEventListener('submit', handleForm);
-
+	form2.addEventListener('submit', handleForm);
 
 
     async function connect(){ 
@@ -214,7 +251,6 @@
     async function getAccount(){
         const accounts = await web3.eth.requestAccounts();
         const account = accounts[0];
-		//console.log(account);
         console.log(account);
 		return account;
     }
@@ -268,34 +304,86 @@
         console.log("has integrity: " + result);
     }
 
-    async function uploadHashValue(UID, hashValue, authorizedAddresses){
-		const senderAccount = await getAccount();
-		//console.log("UID: " + UID);
-		console.log("Hash value: " + hashValue);
-		let padded = web3.utils.padRight(web3.utils.fromAscii('hashValue'), 34);
-		console.log("padded" + padded);
-		//console.log("Authorized Addresses: " + authorizedAddresses);
-        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount }); // web3.utils.asciiToHex(hashValue)
-
-        let result = await contract.methods.uploadNewBlueprintHash(UID, "0x6364373336353739346532613130313637393935326232386663343166383462", ["0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e",
-																																				"0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e"]).send();
-        console.log("Result: " + result);
-    }
-
-
 	window.uploadBlueprint = async function(){
 			const UID = getUID();
 			const hashValue = getHashValue();
 			const authorizedAccounts = getAuthorizedAccounts();
-
-			uploadHashValue(UID, hashValue, authorizedAccounts);
-
-
+			upload(UID, hashValue, authorizedAccounts);
 	}
+
+	const CONTRACT_ADDRESS = "0xb837FFcC01CD7CBAeE43b16AecFa68065eD931fe"; 
+
+    async function upload(UID, hashValue, authorizedAddresses){
+		
+		const senderAccount = await getAccount();
+		//console.log("UID: " + UID);
+		console.log("Hashed value: " + hashValue);
+
+		//console.log("Authorized Addresses: " + authorizedAddresses);
+        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount }); // web3.utils.asciiToHex(hashValue)
+		const array = ["0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e",	"0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e"];
+		
+		var event = contract.NewContract(function(error, result){
+			if(!error){
+				console.log(result);
+			}
+		});
+        let result = await contract.methods.uploadNewBlueprintHash("3", "0x1364313336353739346532613130313637393935326232386663343166383462", array).send();
+
+        console.log("Result: " + result.contractAddress);
+    }
+
+	window.validateBlueprint = async function(){
+		const senderAccount = await getAccount();
+		const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount});
+		let result = await contract.methods.validateBlueprintHash("0x6364373336353739346532613130313637393935326232386663343166383462").call()
+		.then((result) => {
+			console.log(result);
+		});
+		
+	}
+
+
 
 	listenToBinaryData();
 
+
+	//uploadHashValue();
     //console.log("Ethereum address: " + window.ethereum.selectedAddress);
     
 
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- window.uploadHashValue = async function(){
+	// account = await getAccount();
+	const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: "0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e" });
+	let result = await contract.methods.uploadHashValue("Marian", "Marian").send();
+	console.log("Uploaded value: " + result);
+} -->
+
+
+
+
