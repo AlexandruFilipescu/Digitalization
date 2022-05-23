@@ -5,99 +5,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Blockchain demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+	
   </head>
-  <body>
-    <button id="connectButton" onclick="connect()"> Connect </button>
-    <h2>Account: <span class="showAccount"></span></h2>
+  <body style="background-color: #deeafc">
 
+	<div style="padding-left:30%;padding-right:30%"> 
+
+		
+		<nav>
+			<div class="nav nav-tabs" id="nav-tab" role="tablist">
+			  <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Upload blueprint</button>
+			  <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Update blueprint</button>
+			  <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Validate blueprint</button>
+			</div>
+		  </nav>
+		  <div class="tab-content" id="nav-tabContent">
+			<div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+				<h1> Welcome to the BIM Trust chain</h1>
+			<h3>You can enter your blueprint here and upload it on the BIM trust chain.</h3>
+		
+			<form id="myForm">
+				<div class="form-group">
+					<label for="uidInput">UID</label>
+					<input type="text" class="form-control" id="uidInput" placeholder="Enter Unique ID">
+					<small id="UIDHelp" class="form-text text-muted"> Make sure that you use an Unique identifier</small>
+				</div>
+				<div class="form-group">
+					<label for="authAddresses"> Insert Authorized Accounts</label>
+					<input type="text" class="form-control" id="authAddresses" placeholder="Enter Addresses">
+					<small id="authAddrHelp" class="form-text text-muted"> Enter all user addresses who are allowed to update your blueprint</small>
+				</div>
+				<div class="form-group">
+					<label for="authAddresses">File Hash</label>
+					<input type="text" class="form-control mt-1" id="hashInput" placeholder="Hash value" readonly>
+					<input id="file" type="file" class="form-control-file mt-3" >
+					<button id="read-file">Hash File</button>
+				</div>
+				<br>
+			<button onclick="uploadBlueprint()" id="upload" class="btn btn-primary">Upload Blueprint</button>
+		</form>
+
+			</div>
+			<div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+				Update blueprint
+			</div>
+			<div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">Validate blueprint</div>
+		  </div>
+		
+
+
+
+
+
+
+
+
+
+
+		
+	</div>
   </body>
   <footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js" integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk" crossorigin="anonymous"></script>
    
-    <script type="text/javascript" src="https://unpkg.com/web3@1.7.3/dist/web3.min.js"></script>
+    <!-- <script type="text/javascript" src="https://unpkg.com/web3@1.7.3/dist/web3.min.js"></script> Previously used version of Web3-->
+	<script src="https://unpkg.com/web3@latest/dist/web3.min.js"></script>
+	
     <script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"> </script>
-    <!-- https://unpkg.com/web3@1.7.3/dist/web3.min.js -->
-   
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js" integrity="sha512-IKpu1GFk/bQ+2fOc4sXuA6lm7Rct4P7611iDBxY9LReOZ2PpwoDWWqj6GSYejUce1FLxo/d4lxAnKqGWJuBw7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
   </footer>
 </html>
 
-<script type="module">
 
+
+<script type="module">
+	
     const ABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "id",
-				"type": "string"
+				"internalType": "uint256",
+				"name": "UID",
+				"type": "uint256"
 			},
 			{
-				"internalType": "string",
-				"name": "receivedBluePrintHashed",
-				"type": "string"
+				"internalType": "bytes32",
+				"name": "hashValue",
+				"type": "bytes32"
 			}
 		],
-		"name": "uploadHashValue",
-		"outputs": [],
+		"name": "updateBluePrint",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "isUpdated",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "oldtimestamp",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "bytes32[]",
+				"name": "oldHashes",
+				"type": "bytes32[]"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "blueprintRegistry",
-		"outputs": [
+				"internalType": "uint256",
+				"name": "UID",
+				"type": "uint256"
+			},
 			{
 				"internalType": "bytes32",
-				"name": "",
+				"name": "hashValue",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address[]",
+				"name": "authorizedAddresses",
+				"type": "address[]"
+			}
+		],
+		"name": "uploadNewBlueprintHash",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "isCertified",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "hashValue",
 				"type": "bytes32"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "blueprintName",
-				"type": "string"
-			}
-		],
-		"name": "existsHashValue",
+		"name": "validateBlueprintHash",
 		"outputs": [
 			{
 				"internalType": "bool",
-				"name": "",
+				"name": "isValid",
 				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
+			},
 			{
-				"internalType": "string",
-				"name": "receivedBluePrint",
-				"type": "string"
-			}
-		],
-		"name": "hasIntegrity",
-		"outputs": [
+				"internalType": "uint256",
+				"name": "uniqueId",
+				"type": "uint256"
+			},
 			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
 			}
 		],
-		"stateMutability": "view",
+		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]
@@ -109,7 +185,7 @@
 
     if(provider) {
         web3 = new Web3(provider);
-        console.log("We have a provider");
+        //console.log("We have a provider");
     } else {
         web3 = new Web3("http://127.0.0.1:7545");
     }
@@ -121,20 +197,13 @@
     }
     const CONTRACT_ADDRESS = "0x045660a9AE96286f97035569393A2dcbDC6EcD78";
 
-   
+	var form = document.getElementById("myForm"); 
+	function handleForm(event) {
+		event.preventDefault();
+	 }
+	form.addEventListener('submit', handleForm);
 
-    async function hasIntegrity(){
-        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
-        let result = await contract.methods.hasIntegrity("ce").call();
-        console.log("has integrity: " + result);
-    }
 
-    async function uploadHashValue(){
-        getAccount();
-        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: account });
-        let result = await contract.methods.uploadHashValue("Marian", "Marian").send();
-        console.log("has integrity: " + result);
-    }
 
     async function connect(){ 
         if(typeof window.ethereum !== 'undefined'){
@@ -145,10 +214,88 @@
     async function getAccount(){
         const accounts = await web3.eth.requestAccounts();
         const account = accounts[0];
+		//console.log(account);
         console.log(account);
+		return account;
     }
 
-    //getAccount();
+	function getUID(){
+		return document.getElementById('uidInput').value;
+	}
+
+	function getAuthorizedAccounts(){
+		var text = document.getElementById("authAddresses").value
+		text = text.split(' ');										// Split makes an array out of the inserted words
+		return text;
+	}
+
+	function getHashValue(){
+		var text = document.querySelector("#hashInput").value;
+		return text;
+	}
+
+	function listenToBinaryData(){
+		document.querySelector("#read-file").addEventListener('click', function(){
+			// If there is no file to read
+			if(document.querySelector("#file").value == '') {
+				console.log('No file was selected');
+				return;
+			}
+
+			var file = document.querySelector('#file').files[0];
+
+			var reader = new FileReader();
+			reader.onload = function(e){
+				// binary data
+				var data = e.target.result;
+				var hash = CryptoJS.SHA3(CryptoJS.enc.Latin1.parse(data), { outputLength: 256 }); // This will actually return an Keccak-256 not an SHA3
+
+				var keccakHash = hash.toString(CryptoJS.enc.hex); 
+				document.querySelector("#hashInput").value = keccakHash;
+			};
+			reader.onerror = function(e){
+				// error 
+				console.log('Error: ' + e.type);
+			}
+			reader.readAsBinaryString(file);
+		});
+	}
+
+
+	async function hasIntegrity(){
+        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+        let result = await contract.methods.hasIntegrity("ce").call();
+        console.log("has integrity: " + result);
+    }
+
+    async function uploadHashValue(UID, hashValue, authorizedAddresses){
+		const senderAccount = await getAccount();
+		//console.log("UID: " + UID);
+		console.log("Hash value: " + hashValue);
+		let padded = web3.utils.padRight(web3.utils.fromAscii('hashValue'), 34);
+		console.log("padded" + padded);
+		//console.log("Authorized Addresses: " + authorizedAddresses);
+        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount }); // web3.utils.asciiToHex(hashValue)
+
+        let result = await contract.methods.uploadNewBlueprintHash(UID, "0x6364373336353739346532613130313637393935326232386663343166383462", ["0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e",
+																																				"0xc3889223b12E8828D23fF597e80aFE09DB12Eb5e"]).send();
+        console.log("Result: " + result);
+    }
+
+
+	window.uploadBlueprint = async function(){
+			const UID = getUID();
+			const hashValue = getHashValue();
+			const authorizedAccounts = getAuthorizedAccounts();
+
+			uploadHashValue(UID, hashValue, authorizedAccounts);
+
+
+	}
+
+	listenToBinaryData();
+
     //console.log("Ethereum address: " + window.ethereum.selectedAddress);
-    getAccount();
+    
+
 </script>
