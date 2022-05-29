@@ -442,12 +442,9 @@
 		let alexResult = await contract.methods.getBlueprintHistory(uid).call().
 		then(receipt => {
 			let previousHashes = receipt['oldHashes'];
-			//previousHashes.push(String(receipt['events']['BluePrintHistory']['returnValues']['hashValue']));
 			let x = receipt['hashValue'];
 			let blueprintUpdaters = receipt['blueprintUpdaters'];
-			//blueprintUpdaters.push(receipt['events']['BluePrintHistory']['returnValues']['owner']);
 			let previousTimestamps = receipt['oldTimestamps'];
-			//previousTimestamps.push(receipt['events']['BluePrintHistory']['returnValues']['timestamp']);
 			let domElem = '<thead><tr><th scope="col">Version</th><th scope="col">Hash</th><th scope="col">Address</th><th scope="col">Timestamp</th></tr></thead><tbody>';
 			console.log(previousHashes);
 			console.log(blueprintUpdaters);
