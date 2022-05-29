@@ -94,6 +94,26 @@
 			</div>
 		  </div>
 	</div>
+
+	<!-- MODAL -->
+	<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <!-- <h5 class="modal-title" id="exampleModalLabel">Information</h5> -->
+			  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+			  <h5 id="modalText"></h5>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+			  <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+			</div>
+		  </div>
+		</div>
+	  </div>
+
   </body>
   <footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
@@ -109,9 +129,10 @@
   </footer>
 </html>
 
+
 <script type="module">
 
-	const ABI =[
+	const ABI = [
 	{
 		"anonymous": false,
 		"inputs": [
@@ -187,6 +208,44 @@
 		"type": "event"
 	},
 	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "isUnique",
+				"type": "bool"
+			}
+		],
+		"name": "NewBlueprint",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "bool",
+				"name": "isValid",
+				"type": "bool"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "uniqueId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			}
+		],
+		"name": "ValidateBlueprint",
+		"type": "event"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -214,19 +273,6 @@
 		],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isUnique",
-				"type": "bool"
-			}
-		],
-		"name": "NewBlueprint",
-		"type": "event"
 	},
 	{
 		"inputs": [
@@ -292,31 +338,6 @@
 		"type": "function"
 	},
 	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isValid",
-				"type": "bool"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "uniqueId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "ValidateBlueprint",
-		"type": "event"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -354,7 +375,7 @@
 
 	//SETUP
 
-	const CONTRACT_ADDRESS = "0x9eb0EfE71c0189b2080bb7F050327DD767178AAD";
+	const CONTRACT_ADDRESS = "0x4c2d1A1F707eE578a7aC42B1c62CdEfcFE6593C4";
 
     let provider = await detectEthereumProvider();
     let web3 = null;
@@ -388,9 +409,9 @@
 			var isUnique = receipt['events']['NewBlueprint']['returnValues']['isUnique'];
 		
 			if(isUnique){
-				window.alert('The blueprint has been successfully certified!');
+				showModal('The blueprint has been successfully certified!');
 			} else {
-				window.alert('The contract has already been certified...');
+				showModal('The contract has already been certified...');
 			}
 			
 		});
@@ -409,27 +430,24 @@
 			let blueprintUpdaters = receipt['events']['BluePrintUpdated']['returnValues']['blueprintUpdaters'];
 
 			if(isUpdated){
-				console.log("Alarm");
-				window.alert("The blueprint has been sucessfully updated from " + previousHashes[previousHashes.length -1] + " to " + hashValue);
+				showModal("The blueprint has been sucessfully updated from: " + previousHashes[previousHashes.length -1] + " \nto:\n " + hashValue);
 			} else {
-				window.alert("No Blueprint with UID: " + uid + " found! Update aborted.")
+				showModal("No Blueprint with UID: " + uid + " found! Update aborted.");
 			}
 		});
 	}
 
 	window.getBlueprintHistory = async function(){
 		const uid = getUpdateUID();
-		let result = await contract.methods.getBlueprintHistory(uid).send()
-		.on('receipt', function(receipt){
-			console.log(receipt);
-			let previousHashes = receipt['events']['BluePrintHistory']['returnValues']['oldHashes'];
+		let alexResult = await contract.methods.getBlueprintHistory(uid).call().
+		then(receipt => {
+			let previousHashes = receipt['oldHashes'];
 			//previousHashes.push(String(receipt['events']['BluePrintHistory']['returnValues']['hashValue']));
-			let x = receipt['events']['BluePrintHistory']['returnValues']['hashValue'];
-			let blueprintUpdaters = receipt['events']['BluePrintHistory']['returnValues']['blueprintUpdaters'];
+			let x = receipt['hashValue'];
+			let blueprintUpdaters = receipt['blueprintUpdaters'];
 			//blueprintUpdaters.push(receipt['events']['BluePrintHistory']['returnValues']['owner']);
-			let previousTimestamps = receipt['events']['BluePrintHistory']['returnValues']['oldTimestamps'];
+			let previousTimestamps = receipt['oldTimestamps'];
 			//previousTimestamps.push(receipt['events']['BluePrintHistory']['returnValues']['timestamp']);
-
 			let domElem = '<thead><tr><th scope="col">Version</th><th scope="col">Hash</th><th scope="col">Address</th><th scope="col">Timestamp</th></tr></thead><tbody>';
 			console.log(previousHashes);
 			console.log(blueprintUpdaters);
@@ -447,26 +465,33 @@
 			domElem += '</tbody>';
 
 			document.getElementById("tableBody").innerHTML = domElem;
+
+		
 		});
+
 	}
 
 	window.validateBlueprint = async function(){
 		const validationHashValue = getValidationHashValue();
 		const validationUid = getValidationUID();
-		let result = await contract.methods.validateBlueprintHash(validationUid, validationHashValue).send()
-		.on('receipt', function(receipt){
-			console.log(receipt);
-
-			let isValid = receipt['events']['ValidateBlueprint']['returnValues']['isValid'];
-			let owner = receipt['events']['ValidateBlueprint']['returnValues']['owner'];
-			let uid = receipt['events']['ValidateBlueprint']['returnValues']['uniqueId'];
+		let result = await contract.methods.validateBlueprintHash(validationUid, validationHashValue).call()
+		.then(receipt => {
+			console.log("receipt:" + receipt);
+			console.log("Owner:" + receipt['owner']);
+			console.log("Unique Id:" + receipt['uniqueId']);
+			
+			let isValid = receipt['isValid'];
+			let owner = receipt['owner'];
+			let uid =   receipt['uniqueId'];
 
 			if(isValid){
-				window.alert("The blueprint has successfully been validated! UID is:" + uid + " , owner is: " + owner + ".");
+				showModal("The blueprint has successfully been validated! \n\n UID is: " + uid + "\n\n Owner is: " + owner + ".");
 			} else{
-				window.alert("The blueprint certificate with the UID: " + validationUid + " differs from the uploaded blueprint!");
+				showModal("The blueprint certificate with the UID: " + validationUid + " differs from the uploaded blueprint!");
 			}
 		});
+		
+	
 	}
 
 	//HELPER FUNCTIONS
@@ -602,7 +627,21 @@
 	formValidate.addEventListener('submit', handleForm);
 	formUpdate.addEventListener('submit', handleForm);
 
+	
 	listenToBinaryData();
 	listenToBinaryData2();
 	listenToBinaryData3();
+
+	const modalToogle = document.getElementById("modal");
+	
+	function showModal(textContent){
+		const myModal = new bootstrap.Modal("#myModal", {});
+		const modalToggle = document.getElementById('toggleMyModal'); 
+		document.getElementById("modalText").innerText = textContent;
+		myModal.show();
+	}
+
+
+
+
 </script>
