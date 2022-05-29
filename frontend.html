@@ -393,8 +393,20 @@
         console.log(web3);
     }
 
-	const senderAccount = await getAccount();
-	const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount});
+	let senderAccount = await getAccount();
+	let contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount});
+
+	async function getAccount(){
+        const accounts = await web3.eth.requestAccounts();
+        const account = accounts[0];
+        console.log("Selected account: " + account);
+		return account;
+    }
+
+	ethereum.on('accountsChanged', async function(accounts){
+		let newAccount = await getAccount();
+		contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: newAccount}); 
+	});
 
 	//SMART CONTRACT CALLS
 	window.uploadBlueprint = async function(){
@@ -428,11 +440,13 @@
 			let isUpdated = receipt['events']['BluePrintUpdated']['returnValues']['isUpdated'];
 			let previousHashes = receipt['events']['BluePrintUpdated']['returnValues']['oldHashes'];
 			let blueprintUpdaters = receipt['events']['BluePrintUpdated']['returnValues']['blueprintUpdaters'];
+			console.log("Blueprint Updaters:");
+			console.log(blueprintUpdaters);
 
 			if(isUpdated){
 				showModal("The blueprint has been sucessfully updated from: " + previousHashes[previousHashes.length -1] + " \nto:\n " + hashValue);
 			} else {
-				showModal("No Blueprint with UID: " + uid + " found! Update aborted.");
+				showModal("No Blueprint with UID: " + uid + " found or the sender is not authorized to update! Update aborted.");
 			}
 		});
 	}
@@ -606,12 +620,9 @@
 		return "0x"+text;
 	}
 
-	async function getAccount(){
-        const accounts = await web3.eth.requestAccounts();
-        const account = accounts[0];
-        console.log(account);
-		return account;
-    }
+
+
+	
 
 	//Shenanigans
 	var form = document.getElementById("myForm"); 

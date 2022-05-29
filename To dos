@@ -7,7 +7,7 @@ Must do's
 Can do's:
 1.) add own sub currency to our smart contract for payment besides the actual gas fees (code already here in the slides)
 2.) fix the issue that on "getBlueprintHistory" only old versions are shown
-3.) make the visualization of returned values prettier on the UI(window.alert() is bad practice)
+3.) ~~make the visualization of returned values prettier on the UI(window.alert() is bad practice) ~~
 
 
 
