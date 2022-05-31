@@ -1,4 +1,6 @@
-const ABI = [
+const ABI = 
+
+[
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
