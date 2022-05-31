@@ -37,7 +37,6 @@
 						<label for="file">Upload Blueprint</label>
 						<br>
 						<input id="file" type="file" class="form-control-file mt-3" >
-						<button type="button" class="btn btn-secondary" id="read-file">generate hash</button>
 						<input type="text" class="form-control mt-1" id="hashInput" placeholder="Hash value" readonly>
 					</div>
 					<hr style="border-top: 1px solid black;"/>
@@ -47,6 +46,7 @@
 			<div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
 				<h1> Welcome to the BIM Trust chain!</h1>
 				<h3>You can enter your blueprint here and update it on the BIM trust chain.</h3>
+				<h5>Processing fee of: <span id="ethPrice2" class="badge bg-primary"></span> ETH</h5>
 				<form id="updateForm">
 					<div class="form-group">
 						<label for="uidInputUpdate">UID</label>
@@ -58,7 +58,6 @@
 						<label for="hashInputUpdate">Upload Blueprint</label>
 						<br>
 						<input id="fileUpdate" type="file" class="form-control-file mt-3" >
-						<button type="button" class="btn btn-secondary" id="read-file-update">generate Hash</button>
 						<input type="text" class="form-control mt-1" id="hashInputUpdate" placeholder="Hash value" readonly>
 					</div>
 					<hr style="border-top: 1px solid black;"/>
@@ -85,7 +84,6 @@
 					<div class="form-group">
 						<label for="hashInputValidate">File Hash</label>
 						<input id="fileValidate" type="file" class="form-control-file mt-3" >
-						<button type="button" class="btn btn-secondary" id="read-file-validate">generate hash</button>
 						<input type="text" class="form-control mt-1" id="hashInputValidate" placeholder="Hash value" readonly>
 
 					</div>
@@ -159,10 +157,14 @@
 
 	let senderAccount = await getAccount();
 	let contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount});
-	const ethereumFee 	   = '0.1';
+	const ethereumFeeUpload 	   = '0.1';
+	const ethereumFeeUpdate 	   = '0.2';
 	var fee = document.getElementById("ethPrice");
-	fee.innerText = ethereumFee;
-	const ETH  			   = web3.utils.toWei(ethereumFee);
+	var fee2 =  document.getElementById("ethPrice2");
+	fee.innerText = ethereumFeeUpload;
+	fee2.innerText = ethereumFeeUpdate;
+	const ETHUpload  			   = web3.utils.toWei(ethereumFeeUpload);
+	const ETHUpdate 	   = Web3.utils.toWei(ethereumFeeUpdate);
 
 	async function getAccount(){
         const accounts = await web3.eth.requestAccounts();
@@ -182,7 +184,7 @@
 		const hashValue = getHashValue();
 		const authorizedAccounts = getAuthorizedAccounts();
 		console.log("Account: " + senderAccount + " send hash: " + hashValue + " with UID: " + uid + " to SM...");
-		let result = await contract.methods.uploadNewBlueprintHash(uid, hashValue, authorizedAccounts).send({value: ETH})
+		let result = await contract.methods.uploadNewBlueprintHash(uid, hashValue, authorizedAccounts).send({value: ETHUpload})
 		.on('receipt', function(receipt){	
 			console.log(receipt);	
 
@@ -203,7 +205,7 @@
 		const uid = getUpdateUID();
 		const hashValue = getUpdateHashValue();
 		console.log("Blueprint with UID: " + uid + " will be updated with hash: " + hashValue);
-		let result = await contract.methods.updateBlueprint(uid, hashValue).send({value: ETH})
+		let result = await contract.methods.updateBlueprint(uid, hashValue).send({value: ETHUpdate})
 		.on('receipt', function(receipt){
 			console.log(receipt);
 
@@ -275,87 +277,44 @@
 	
 	}
 
-	//HELPER FUNCTIONS
-	function listenToBinaryData(){
-		document.querySelector("#read-file").addEventListener('click', function(){
-			// If there is no file to read
-			if(document.querySelector("#file").value == '') {
-				console.log('No file was selected');
-				return;
-			}
 
-			var file = document.querySelector('#file').files[0];
+	const inputFile = document.querySelector("#file");
+	const updateFile = document.querySelector("#fileUpdate");
+	const validateFile = document.querySelector("#fileValidate");
+	inputFile.addEventListener("change", handleFiles, false);
+	updateFile.addEventListener("change", handleFiles, false);
+	validateFile.addEventListener("change", handleFiles, false);
 
-			var reader = new FileReader();
+	function handleFiles(event){
+		const fileList = this.files;
+
+		var file = fileList[0];
+		var reader = new FileReader();
 			reader.onload = function(e){
 				// binary data
 				var data = e.target.result;
 				var hash = CryptoJS.SHA3(CryptoJS.enc.Latin1.parse(data), { outputLength: 256 }); // This will actually return an Keccak-256 not an SHA3
 				var keccakHash = hash.toString(CryptoJS.enc.hex); 
-
-				document.querySelector("#hashInput").value = keccakHash;
+				if(event.target.id == "file"){
+					document.querySelector("#hashInput").value = keccakHash;
+					console.log("Input file called this handler");
+				} else if (event.target.id == "fileUpdate"){
+					console.log("File update called this handler");
+					document.querySelector("#hashInputUpdate").value = keccakHash;
+				} else {
+					console.log("File validate called this handler");
+					document.querySelector("#hashInputValidate").value = keccakHash;
+				}	
 			};
 			reader.onerror = function(e){
 				// error 
 				console.log('Error: ' + e.type);
 			}
 			reader.readAsBinaryString(file);
-		});
+
+
 	}
 
-	function listenToBinaryData2(){
-		document.querySelector("#read-file-validate").addEventListener('click', function(){
-			// If there is no file to read
-			if(document.querySelector("#fileValidate").value == '') {
-				console.log('No file was selected');
-				return;
-			}
-
-			var file = document.querySelector('#fileValidate').files[0];
-
-			var reader = new FileReader();
-			reader.onload = function(e){
-				// binary data
-				var data = e.target.result;
-				var hash = CryptoJS.SHA3(CryptoJS.enc.Latin1.parse(data), { outputLength: 256 }); // This will actually return an Keccak-256 not an SHA3
-				var keccakHash = hash.toString(CryptoJS.enc.hex); 
-
-				document.querySelector("#hashInputValidate").value = keccakHash;
-			};
-			reader.onerror = function(e){
-				// error 
-				console.log('Error: ' + e.type);
-			}
-			reader.readAsBinaryString(file);
-		});
-	}
-
-	function listenToBinaryData3(){
-		document.querySelector("#read-file-update").addEventListener('click', function(){
-			// If there is no file to read
-			if(document.querySelector("#fileUpdate").value == '') {
-				console.log('No file was selected');
-				return;
-			}
-
-			var file = document.querySelector('#fileUpdate').files[0];
-
-			var reader = new FileReader();
-			reader.onload = function(e){
-				// binary data
-				var data = e.target.result;
-				var hash = CryptoJS.SHA3(CryptoJS.enc.Latin1.parse(data), { outputLength: 256 }); // This will actually return an Keccak-256 not an SHA3
-				var keccakHash = hash.toString(CryptoJS.enc.hex); 
-
-				document.querySelector("#hashInputUpdate").value = keccakHash;
-			};
-			reader.onerror = function(e){
-				// error 
-				console.log('Error: ' + e.type);
-			}
-			reader.readAsBinaryString(file);
-		});
-	}
 
 	function getUID(){
 		return document.getElementById('uidInput').value;
@@ -389,9 +348,6 @@
 		var text = document.querySelector("#hashInputUpdate").value;
 		return "0x"+text;
 	}
-
-
-
 	
 
 	//Shenanigans
@@ -405,10 +361,8 @@
 	formValidate.addEventListener('submit', handleForm);
 	formUpdate.addEventListener('submit', handleForm);
 
-	
-	listenToBinaryData();
-	listenToBinaryData2();
-	listenToBinaryData3();
+
+
 
 	const modalToogle = document.getElementById("modal");
 	

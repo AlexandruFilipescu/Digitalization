@@ -16,8 +16,8 @@ What I (Alex) did:
 2) Added Modal effects
 3) Fixed Bug if accounts were changed
 4) Added an ETH fee that goes into our account
-
-
+5) Refactored: Removed 70 lines of code
+6) Automatically show hashed value of a file by using event handlers
 
 
 

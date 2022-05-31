@@ -1,7 +1,13 @@
 pragma solidity >=0.7.0 <0.9.0;
-
+// SPDX-License-Identifier: MIT
 contract bluePrintsRepository {
-    
+
+    address payable public depositAccount = payable(0x9A4128b59543D286d3b064f3F67B228fA9b300A0);
+
+    constructor(){
+        //depositAccount = payable(msg.sender);
+    }
+
     BluePrint[] blueprints; 
 
     struct BluePrint{
@@ -20,7 +26,9 @@ contract bluePrintsRepository {
     event BluePrintUpdated (bool isUpdated, uint256[] oldtimestamp, bytes32[] oldHashes, address[] blueprintUpdaters);
     event BluePrintHistory (bytes32[] oldHashes, uint256[] oldTimestamps, address[] blueprintUpdaters, bytes32 hashValue, uint256 timestamp, address owner);
 
-    function uploadNewBlueprintHash(uint UID, bytes32 hashValue, address[] memory authorizedAddresses ) public returns(bool isCertified){ 
+    
+
+    function uploadNewBlueprintHash(uint UID, bytes32 hashValue, address[] memory authorizedAddresses ) public payable returns(bool isCertified){ 
         bool isUIDUnique = true;
         for(uint i = 0; i<blueprints.length; i++){
             if(blueprints[i].UID == UID){
@@ -35,8 +43,10 @@ contract bluePrintsRepository {
             blueprints.push(newBlueprint);
         }
 
-        emit NewBlueprint(isUIDUnique);
+        depositAccount.transfer(msg.value);
 
+        emit NewBlueprint(isUIDUnique);
+        //depositAccount.transfer(10000000000000000000); //17 Zeros
         return(isUIDUnique);
     }
 
@@ -52,11 +62,14 @@ contract bluePrintsRepository {
             }
         }
 
+        
+
         emit ValidateBlueprint(isValid, someId, owner);
         return(isValid,someId, owner);
     }
 
-    function updateBlueprint(uint UID, bytes32 hashValue) public returns(bool isUpdated, uint256[] memory oldtimestamp, bytes32[] memory oldHashes){
+
+    function updateBlueprint(uint UID, bytes32 hashValue) public payable returns(bool isUpdated, uint256[] memory oldtimestamp, bytes32[] memory oldHashes){
         bool bluePrintUpdated = false;
         //
         uint256[] memory oldtimestamps;
@@ -83,7 +96,7 @@ contract bluePrintsRepository {
                 }
             }
         }
-
+        depositAccount.transfer(msg.value);
         emit BluePrintUpdated(bluePrintUpdated, oldtimestamps, oldHashes, oldBlueprintUpdaters);
         return(bluePrintUpdated, oldtimestamps, oldHashses);
     }
@@ -111,4 +124,6 @@ contract bluePrintsRepository {
         emit BluePrintHistory(oldHashes, oldTimestamps, blueprintUpdaters, hashValue, timestamp, owner);
         return(oldHashes, oldTimestamps, blueprintUpdaters);
     }
+
+    
 }
