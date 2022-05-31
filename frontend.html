@@ -19,6 +19,7 @@
 			<div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
 				<h1> Welcome to the BIM Trust chain!</h1>
 				<h3>You can enter your blueprint here and certify it on the BIM trust chain.</h3>
+				<h5>Processing fee of: <span id="ethPrice" class="badge bg-primary"></span> ETH</h5>
 				<form id="myForm">
 					<div class="form-group">
 						<label for="uidInput">UID</label>
@@ -40,7 +41,7 @@
 						<input type="text" class="form-control mt-1" id="hashInput" placeholder="Hash value" readonly>
 					</div>
 					<hr style="border-top: 1px solid black;"/>
-					<button onclick="uploadBlueprint()" id="upload" class="btn btn-primary">Upload Blueprint</button>
+					<button onclick="uploadBlueprint()" id="upload" class="btn btn-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Processing fee of 0.1 ETH">Upload Blueprint</button>
 				</form>				
 			</div>
 			<div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
@@ -125,257 +126,20 @@
     <script src="https://unpkg.com/@metamask/detect-provider/dist/detect-provider.min.js"> </script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js" integrity="sha512-IKpu1GFk/bQ+2fOc4sXuA6lm7Rct4P7611iDBxY9LReOZ2PpwoDWWqj6GSYejUce1FLxo/d4lxAnKqGWJuBw7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-	
+	<script type ="text/javascript" src="ABI.js"></script>
   </footer>
 </html>
 
 
 <script type="module">
-
-	const ABI = [
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bytes32[]",
-				"name": "oldHashes",
-				"type": "bytes32[]"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256[]",
-				"name": "oldTimestamps",
-				"type": "uint256[]"
-			},
-			{
-				"indexed": false,
-				"internalType": "address[]",
-				"name": "blueprintUpdaters",
-				"type": "address[]"
-			},
-			{
-				"indexed": false,
-				"internalType": "bytes32",
-				"name": "hashValue",
-				"type": "bytes32"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "BluePrintHistory",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isUpdated",
-				"type": "bool"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256[]",
-				"name": "oldtimestamp",
-				"type": "uint256[]"
-			},
-			{
-				"indexed": false,
-				"internalType": "bytes32[]",
-				"name": "oldHashes",
-				"type": "bytes32[]"
-			},
-			{
-				"indexed": false,
-				"internalType": "address[]",
-				"name": "blueprintUpdaters",
-				"type": "address[]"
-			}
-		],
-		"name": "BluePrintUpdated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isUnique",
-				"type": "bool"
-			}
-		],
-		"name": "NewBlueprint",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "isValid",
-				"type": "bool"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "uniqueId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "ValidateBlueprint",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "UID",
-				"type": "uint256"
-			}
-		],
-		"name": "getBlueprintHistory",
-		"outputs": [
-			{
-				"internalType": "bytes32[]",
-				"name": "oldHashes",
-				"type": "bytes32[]"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "oldTimestamps",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "address[]",
-				"name": "blueprintUpdaters",
-				"type": "address[]"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "UID",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "hashValue",
-				"type": "bytes32"
-			}
-		],
-		"name": "updateBlueprint",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "isUpdated",
-				"type": "bool"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "oldtimestamp",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "oldHashes",
-				"type": "bytes32[]"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "UID",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "hashValue",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address[]",
-				"name": "authorizedAddresses",
-				"type": "address[]"
-			}
-		],
-		"name": "uploadNewBlueprintHash",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "isCertified",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "UID",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "hashValue",
-				"type": "bytes32"
-			}
-		],
-		"name": "validateBlueprintHash",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "isValid",
-				"type": "bool"
-			},
-			{
-				"internalType": "uint256",
-				"name": "uniqueId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-];
+//console.log(ABI);
+	const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+	const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 	//SETUP
 
-	const CONTRACT_ADDRESS = "0x4c2d1A1F707eE578a7aC42B1c62CdEfcFE6593C4";
+	const CONTRACT_ADDRESS = "0xD8a3D0D74ED3C1A285CdeDf7E78F4dAC0C68DAa5";
+	
 
     let provider = await detectEthereumProvider();
     let web3 = null;
@@ -395,6 +159,10 @@
 
 	let senderAccount = await getAccount();
 	let contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS, {from: senderAccount});
+	const ethereumFee 	   = '0.1';
+	var fee = document.getElementById("ethPrice");
+	fee.innerText = ethereumFee;
+	const ETH  			   = web3.utils.toWei(ethereumFee);
 
 	async function getAccount(){
         const accounts = await web3.eth.requestAccounts();
@@ -414,7 +182,7 @@
 		const hashValue = getHashValue();
 		const authorizedAccounts = getAuthorizedAccounts();
 		console.log("Account: " + senderAccount + " send hash: " + hashValue + " with UID: " + uid + " to SM...");
-		let result = await contract.methods.uploadNewBlueprintHash(uid, hashValue, authorizedAccounts).send()
+		let result = await contract.methods.uploadNewBlueprintHash(uid, hashValue, authorizedAccounts).send({value: ETH})
 		.on('receipt', function(receipt){	
 			console.log(receipt);	
 
@@ -427,13 +195,15 @@
 			}
 			
 		});
+
+		
 	}
 
 	window.updateBlueprint = async function(){
 		const uid = getUpdateUID();
 		const hashValue = getUpdateHashValue();
 		console.log("Blueprint with UID: " + uid + " will be updated with hash: " + hashValue);
-		let result = await contract.methods.updateBlueprint(uid, hashValue).send()
+		let result = await contract.methods.updateBlueprint(uid, hashValue).send({value: ETH})
 		.on('receipt', function(receipt){
 			console.log(receipt);
 

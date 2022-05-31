@@ -11,9 +11,11 @@ Can do's:
 
 
 
-What I did:
-1) I modified the send() to call();
-2)
+What I (Alex) did:
+1) I modified the 2 send() functions to call();
+2) Added Modal effects
+3) Fixed Bug if accounts were changed
+4) Added an ETH fee that goes into our account
 
 
 
